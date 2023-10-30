@@ -6,6 +6,7 @@ let startButton;
 let slider;
 let originalImageURL;
 let originalImage;
+let apiKey = 'eec85815-ab2e-465c-acab-f168f2edfb1f'; 
 
 // Tiles configuration
 let tiles = [];
@@ -19,6 +20,19 @@ let board = [];
 //loading Api data
 function preload() {
   apiRequest();
+}
+
+function playAgain() {
+   apiRequest().then(() => {
+      start = true
+      // resetPuzzle()
+     tiles = []
+     board = []
+    playAgainButton.hide()
+   }
+   )
+
+
 }
 
 // Tile class to represent individual tiles
@@ -40,6 +54,12 @@ function setup() {
   startButton.position(250,280);
   startButton.size(120, 50);
   startButton.mousePressed(startPuzzle)
+  //Play again Buttob
+  playAgainButton = createButton('Play Again');
+  playAgainButton.position(250, 280);
+  playAgainButton.size(120, 50);
+  playAgainButton.hide(); // Hide the play again button initially
+  playAgainButton.mousePressed(playAgain)
   //Creating Slider  
   slider = createSlider(2,10,4,1)
   slider.position(0,600);
@@ -49,10 +69,21 @@ function setup() {
 
 // Fetch image data from an API
 async function apiRequest() {
-  let request = await fetch("https://dog.ceo/api/breeds/image/random");
+  // let request = await fetch("https://dog.ceo/api/breeds/image/random");
+  let request = await fetch(`https://api.harvardartmuseums.org/object?apikey=${apiKey}&size=50`);
   let data = await request.json();
-  imgURL = data.message;
-  myImage = loadImage(imgURL, () => {
+  console.log(data.records)
+  // artworks = data.records.filter(artwork => artwork.primaryimageurl);
+  artworks = data.records.filter(artwork => artwork.primaryimageurl);
+  if (artworks.length == 0){
+    apiRequest()
+  }
+  let randomIndex = int(random(artworks.length-1))
+  imgURL = artworks[randomIndex].primaryimageurl;
+  // if 
+    // let randomIndex = Math.floor(random(artworks.length));
+    // let selectedArtwork = artworks[randomIndex];
+    myImage = loadImage(imgURL, () => {
     myImage.resize(600,600)
 
     // Chop up myImage into tiles
@@ -147,9 +178,18 @@ async function draw() {
   }
 
   // If it is solved
-  if (isSolved()) {
+  if (isSolved() && start == true) {
     console.log("SOLVED");
-   //Add confetti code
+   //Play again button when sloved 
+    playAgainButton.show()
+
+  }
+  
+    // If it is solved
+  if (isSolved() == false) {
+    // console.log("SOLVED");
+   //Play again button when sloved 
+    playAgainButton.hide()
 
   }
 
